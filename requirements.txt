@@ -1,0 +1,10 @@
+pandas
+numpy
+scikit-learn==1.5.1
+shap
+lime
+ucimlrepo
+mlflow
+apache-airflow-client==2.*
+google-genai
+python-dotenv

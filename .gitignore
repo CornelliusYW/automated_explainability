@@ -1,0 +1,30 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.pkl
+*.joblib
+*.ipynb_checkpoints/
+
+# Environment files
+.env
+/*.env
+
+# Logs
+logs/
+*.log
+
+# Airflow logs
+docker/airflow/logs/
+
+# MLflow state and artifacts
+mlruns/
+docker/airflow/mlflow_data/
+docker/airflow/mlflow.db
+docker/airflow/mlflow_data/artifacts/
+
+# VSCode
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db

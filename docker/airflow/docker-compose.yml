@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow-webserver:
+    image: apache/airflow:2.9.0
+    depends_on:
+      - postgres
+    env_file: .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+      - AIRFLOW_CONN_GITHUB_CONN_ID=https://x-token-auth:${GITHUB_TOKEN}@api.github.com?owner=${GITHUB_OWNER}&repo=${GITHUB_REPO}
+    command: bash -c "pip install -r /opt/airflow/project/requirements.txt && airflow webserver"
+    volumes:
+      - ./mlflow_data:/mlflow 
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ../../:/opt/airflow/project
+    ports:
+      - "8080:8080"
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.0
+    depends_on:
+      - postgres
+      - airflow-webserver
+    env_file: .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+      - AIRFLOW_CONN_GITHUB_CONN_ID=https://x-token-auth:${GITHUB_TOKEN}@api.github.com?owner=${GITHUB_OWNER}&repo=${GITHUB_REPO}
+    command: bash -c "pip install -r /opt/airflow/project/requirements.txt && airflow scheduler"
+    volumes:
+      - ./mlflow_data:/mlflow 
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ../../:/opt/airflow/project
+
+  airflow-init:
+    image: apache/airflow:2.9.0
+    depends_on:
+      - postgres
+    env_file: .env
+    environment:
+      - MLFLOW_TRACKING_URI=http://mlflow:5001
+    command: bash -c "pip install -r /opt/airflow/project/requirements.txt && airflow db init && airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password admin"
+    volumes:
+      - ./mlflow_data:/mlflow 
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ../../:/opt/airflow/project
+
+  mlflow:
+    build:
+      context: ./mlflow
+      dockerfile: Dockerfile
+    image: custom-mlflow
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./mlflow_data:/mlflow
+    environment:
+      - MLFLOW_ARTIFACT_ROOT=/mlflow/artifacts
+    command: >
+      mlflow server --backend-store-uri sqlite:////mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0 --port 5001
+
+volumes:
+  postgres_data:
