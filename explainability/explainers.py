@@ -65,13 +65,10 @@ class SHAPExplainer(BaseExplainer):
             X_instances = X.iloc[instances]
             shap_values = self.explainer.shap_values(X_instances)
             
-            # Handle both binary (list of 2) and multiclass/multitask outputs
             if isinstance(shap_values, list):
-                # If binary classification, typically shap_values[1] is for positive class
                 if len(shap_values) == 2:
                     local_vals = shap_values[1]
                 else:
-                    # Multiclass case, take mean of absolute SHAP values
                     local_vals = np.mean([np.abs(sv) for sv in shap_values], axis=0)
             else:
                 local_vals = shap_values
